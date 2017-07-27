@@ -1,23 +1,15 @@
 import React, {Component} from 'react';
-import ChatBar from './chatBar.jsx';
+import ChatBar from './ChatBar.jsx';
 import Message from './Message.jsx';
 import MessageList from './MessageList.jsx';
 
 const appData = {
   currentUser: {name: "Bob"}, // optional. if currentUser is not defined, it means the user is Anonymous
-  messages: [
-    {
-      id: 1,
-      username: "Bob",
-      content: "Has anyone seen my marbles?",
-    },
-    {
-      id: 2,
-      username: "Anonymous",
-      content: "No, I think you lost them. You lost your marbles Bob. You lost them for good."
-    }
-  ]
+  messages: [] // messages coming from the server will be stored here as they arrive
 }
+
+const ws = new WebSocket("ws://0.0.0.0:3001/");
+
 
 class App extends Component {
   constructor(props) {
@@ -27,29 +19,35 @@ class App extends Component {
 
   addMessage(message) {
     const newMessage = {
-      id: Math.random(),
+      id: new Date(),
       username: this.state.currentUser.name,
       content: message
     };
-    const newMessages = this.state.messages.concat(newMessage);
-    this.setState({
-      messages: newMessages
-    });
+    ws.send(JSON.stringify(newMessage));
+    console.log("A new message has been sent: ")
+    console.log(newMessage);
   }
 
   componentDidMount() {
-  console.log("componentDidMount <App />");
-  setTimeout(() => {
-    console.log("Simulating incoming message");
-    // Add a new message to the list of messages in the data store
-    const newMessage = {id: 3, username: "Michelle", content: "Hello there!"};
-    const messages = this.state.messages.concat(newMessage)
-    // Update the state of the app component.
-    // Calling setState will trigger a call to render() in App and all child components.
-    this.setState({messages: messages})
-  }, 3000);
-}
-
+    console.log("componentDidMount <App />");
+    ws.onopen = function(event) {
+      console.log('Connected to server', event);
+      //ws.send("Here's some text that the server is urgently awaiting!");
+    }
+    ws.onmessage = (event) => {
+      console.log("Event: ");
+      console.log(event);
+      console.log("event.data: ");
+      const incomingMessage = event.data;
+      console.log(incomingMessage);
+      console.log("this.state: ");
+      console.log(this.state);
+      const updatedMessages = this.state.messages.concat(JSON.parse(incomingMessage));
+      this.setState({
+        messages: updatedMessages
+      });
+    }
+  }
 
   render() {
     console.log("Rendering <App/>");
