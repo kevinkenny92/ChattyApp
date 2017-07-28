@@ -20,7 +20,8 @@ class App extends Component {
   addMessage(message) {
     const newMessage = {
       id: new Date(),
-      username: this.state.currentUser.name,
+      username: this.state.currentUser.name,    //Send the new username to the App component so this.state.currentUser can be updated//
+
       content: message
     };
     ws.send(JSON.stringify(newMessage));
@@ -29,10 +30,23 @@ class App extends Component {
   }
 
   changeUser(user) {
+    let ogUser = this.state.currentUser.name;
+    // If a user hasn't entered a name, assign them "Anonymous"
+    let newUser = user || "Anonymous";
     this.setState({
-      currentUser: {name: user}
+      currentUser: {name: newUser}
     });
-    console.log("Current user changed to " + user);
+    console.log("Current user changed to " + newUser);
+    // Send a postNotification message to the server
+    let notificationStatement = (`${ogUser}  is now  ${newUser}.`);
+    console.log("notificationStatement: ");
+    console.log(notificationStatement);
+    let userChangeNotification = {
+      type: "postNotification",
+      id: new Date(),
+      content: notificationStatement
+    };
+    ws.send(JSON.stringify(userChangeNotification));
   }
 
   componentDidMount() {
