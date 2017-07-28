@@ -7,7 +7,9 @@ class ChatBar extends Component {
     console.log("Rendering <ChatBar/>");
     return (
       <footer className="chatbar">
-        <input className="chatbar-username" defaultValue={this.props.currentUser.name} placeholder="Your Name (Optional)" onKeyDown={(event) => {
+
+
+        <input className="chatbar-username" defaultValue={this.props.currentUser.name} placeholder="Your Name (Optional) and hit ENTER " onKeyDown={(event) => {
           if (event.key === 'Enter') {
             this.props.changeCurrentUser(event.target.value);
           }
@@ -24,3 +26,5 @@ class ChatBar extends Component {
   }
 }
 export default ChatBar;
+
+

@@ -23,6 +23,7 @@ const uuidv4 = require('uuid/v4');
 const sendMessage = function(message) {
   let newId = uuidv4();
   let returnMessage = {
+    type: "incomingMessage",
     id: newId,
     username: message.username,
     content: message.content
@@ -30,6 +31,13 @@ const sendMessage = function(message) {
   console.log("Here's the returnMessage: ");
   console.log(returnMessage);
   return returnMessage;
+};
+
+const sendNotification = function(notification) {
+  let returnNotification = {
+    type: "incomingNotification",
+    content: notification.content
+  }
 };
 
 wss.on('connection', (ws) => {
