@@ -2,14 +2,17 @@ import React, {Component} from 'react';
 import ChatBar from './ChatBar.jsx';
 import Message from './Message.jsx';
 import MessageList from './MessageList.jsx';
+import NavBar from './NavBar.jsx';
+import UserCount from './UserCount.jsx';
 
 const appData = {
-  currentUser: {name: "Bob"}, // optional. if currentUser is not defined, it means the user is Anonymous
-  messages: [] // messages coming from the server will be stored here as they arrive
+  currentUser: {name: "Bob"}, // optional. if currentUser is not defined, it means the user is Anonymous //
+  messages: [], // messages coming from the server will be stored here as they arrive //
+  userCount: 0
+
 }
 
 const ws = new WebSocket("ws://0.0.0.0:3001/");
-
 
 class App extends Component {
   constructor(props) {
@@ -49,31 +52,42 @@ class App extends Component {
     ws.send(JSON.stringify(userChangeNotification));
   }
 
-  componentDidMount() {
+   componentDidMount() {
     console.log("componentDidMount <App />");
     ws.onopen = function(event) {
       console.log('Connected to server', event);
-      //ws.send("Here's some text that the server is urgently awaiting!");
     }
     ws.onmessage = (event) => {
-      console.log("Event: ");
+      console.log("Received event: ");
       console.log(event);
-      console.log("event.data: ");
-      const incomingMessage = event.data;
-      console.log(incomingMessage);
-      console.log("this.state: ");
-      console.log(this.state);
-      const updatedMessages = this.state.messages.concat(JSON.parse(incomingMessage));
-      this.setState({
-        messages: updatedMessages
-      });
+      let data = JSON.parse(event.data);
+      switch(data.type) {
+
+        case "userCountUpdate":
+          const updatedUserCount = data.content;
+          this.setState({
+            userCount: updatedUserCount
+          });
+          console.log("Updated User Count");
+          break;
+
+        case "incomingMessage":
+        case "incomingNotification":
+          const updatedMessages = this.state.messages.concat(data);
+          this.setState({
+            messages: updatedMessages
+          });
+          break;
+        default:
+          throw new Error("Unknown event type " + data.type);
+      }
     }
   }
-
   render() {
     console.log("Rendering <App/>");
     return (
       <div>
+        <NavBar userCount={this.state.userCount} />
         <MessageList messages={this.state.messages} />
         <ChatBar currentUser={this.state.currentUser} addOneMessage={this.addMessage.bind(this)} changeCurrentUser={this.changeUser.bind(this)} />
       </div>
