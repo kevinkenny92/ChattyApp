@@ -70,6 +70,7 @@ wss.on('connection', (ws) => {
 
   ws.on('message', function incoming(event) {
     let data = JSON.parse(event);
+    console.dir(data);
     switch(data.type) {
       case "postMsg":
         let rcvdMsg = JSON.parse(event);
@@ -98,7 +99,8 @@ wss.on('connection', (ws) => {
         break;
       default:
         // If message type is unknown, throw error
-        throw new Error("Unknown event type " + data.type);
+        //throw new Error("Unknown event type " + data);
+        console.log('Unknown event')
     }
   });
 
