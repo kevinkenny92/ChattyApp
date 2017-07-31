@@ -1,14 +1,10 @@
 // server.js
 
-
-///////////////////////////
-//    Server Settings    //
-///////////////////////////
-
-
 const express = require('express');
 const WebSocket = require('ws');
 const SocketServer = WebSocket.Server;
+
+// Set the port to 3001
 const PORT = 3001;
 
 // Create a new express server
@@ -20,17 +16,11 @@ const server = express()
 // Create the WebSockets server
 const wss = new SocketServer({ server });
 
-
-////////////////////////////
-//    Helper Functions    //
-////////////////////////////
-
-
-// Used to generate random numbers, like our new message id
+// Use to generate random numbers, like our new message id
 const uuidv4 = require('uuid/v4');
 
-// Takes an incoming message from a client, prepare to send to all clients with new id
-const prepareMessage = function(message) {
+// Modified for showing users online Step 4 final step ;
+const prepMsg = function(message) {
   let returnMessage = {
     type: "incomingMessage",
     id: uuidv4(),
@@ -42,8 +32,7 @@ const prepareMessage = function(message) {
   return returnMessage;
 };
 
-// Takes a postNotification username change message from a client, prepare to send to all clients
-const prepareNotification = function(notification) {
+const prepareNot = function(notification) {
   let returnNotification = {
     type: "incomingNotification",
     id: uuidv4(),
@@ -54,26 +43,19 @@ const prepareNotification = function(notification) {
   return returnNotification;
 };
 
-// Create a latestUserCount message to send upon client socket open or close
+
+//USER COUNT //
 const getUserCount = function(count) {
-  let latestUserCount = {
+  let onlineUserCount = {
     type: "userCountUpdate",
     id: uuidv4(),
     content: count
   }
-  return latestUserCount;
+  return onlineUserCount;
 }
 
 
-////////////////////////////////////////
-//    WebSocket Connection Handler    //
-////////////////////////////////////////
-
-
-// When a client connects they are assigned a socket, represented by
-// the ws parameter in the callback.
 wss.on('connection', (ws) => {
-  // When called, sends a latestUserCount message object to all clients
   const sendUserCount = function(count) {
     wss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
@@ -81,22 +63,20 @@ wss.on('connection', (ws) => {
       }
     })
   }
-
   console.log('Client connected');
-  // Update the user count, given a new connection
   sendUserCount();
 
-  // When receiving a message from a client, deal with it based on data type of the message
+//MESSAGING
+
   ws.on('message', function incoming(event) {
     let data = JSON.parse(event);
     switch(data.type) {
-      // a postMessage is a new chat message string from a user
-      case "postMessage":
-        let receivedMessage = JSON.parse(event);
+      case "postMsg":
+        let rcvdMsg = JSON.parse(event);
         console.log("Received a message: ");
-        console.log(receivedMessage);
-        // Use prepareMessage() to prepare a new outgoing chat message
-        let preparedMessage = JSON.stringify(prepareMessage(receivedMessage));
+        console.log(rcvdMsg);
+        // Use prepMsg() to prepare a new outgoing chat message
+        let preparedMessage = JSON.stringify(prepMsg(rcvdMsg));
         // Broast the new message to all clients
         wss.clients.forEach(function each(client) {
           if (client.readyState === WebSocket.OPEN) {
@@ -109,8 +89,8 @@ wss.on('connection', (ws) => {
         let receivedNotification = JSON.parse(event);
         console.log("Received a notification: ");
         console.log(receivedNotification);
-        // Use prepareNotification() to prepare a new outgoing user name notification
-        let preparedNotification = JSON.stringify(prepareNotification(receivedNotification));
+        // Use prepareNot() to prepare a new outgoing user name notification
+        let preparedNotification = JSON.stringify(prepareNot(receivedNotification));
         // Broadcast the new message to all clients
         wss.clients.forEach(function each(client) {
           if (client.readyState === WebSocket.OPEN) {
