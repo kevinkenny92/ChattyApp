@@ -19,41 +19,35 @@ const wss = new SocketServer({ server });
 // Use to generate random numbers, like our new message id
 const uuidv4 = require('uuid/v4');
 
-// Takes an incoming message, ignores its id from client, gives new id from uuidv4()
-const sendMessage = function(message) {
-  let newId = uuidv4();
-  let returnMessage = {
-    type: "incomingMessage",
-    id: newId,
-    username: message.username,
-    content: message.content
-  }
-  console.log("Here's the returnMessage: ");
-  console.log(returnMessage);
-  return returnMessage;
-};
+// Modified for showing users online Step 4 final step ;
 
-const sendNotification = function(notification) {
-  let returnNotification = {
-    type: "incomingNotification",
-    content: notification.content
+
+//USER COUNT //
+const getUserCount = function(count) {
+  let onlineUserCount = {
+    type: "userCountUpdate",
+    id: uuidv4(),
+    content: count
   }
-};
+  return onlineUserCount;
+}
+
 
 wss.on('connection', (ws) => {
-  console.log('Client connected');
-  ws.on('message', function incoming(message) {
-    let receivedMessage = JSON.parse(message);
-    console.log("Received a message: ");
-    console.log(receivedMessage);
-    let data = JSON.stringify(sendMessage(receivedMessage));
-    // re-render the components and the new message should show up.
+  const sendUserCount = function(count) {
     wss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(data);
+        client.send(JSON.stringify(getUserCount(wss.clients.size)));
       }
-    });
-  });
+    })
+  }
+  console.log('Client connected');
+  sendUserCount();
 
-  ws.on('close', () => console.log('Client disconnected'));
+  // When a client closes the socket, calls sendUserCount to reflect one less user
+  ws.on('close', () => {
+    console.log('Client disconnected');
+    // Update the user count, given a closed connection
+    sendUserCount();
+  });
 });
