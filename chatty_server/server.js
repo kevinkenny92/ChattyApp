@@ -75,23 +75,21 @@ wss.on('connection', (ws) => {
         let rcvdMsg = JSON.parse(event);
         console.log("Received a message: ");
         console.log(rcvdMsg);
-        // Use prepMsg() to prepare a new outgoing chat message
+
         let preparedMessage = JSON.stringify(prepMsg(rcvdMsg));
-        // Broast the new message to all clients
         wss.clients.forEach(function each(client) {
           if (client.readyState === WebSocket.OPEN) {
             client.send(preparedMessage);
           }
         });
         break;
-      // a postNotification is a user changing their display name
+
       case "postNotification":
         let receivedNotification = JSON.parse(event);
         console.log("Received a notification: ");
         console.log(receivedNotification);
-        // Use prepareNot() to prepare a new outgoing user name notification
+
         let preparedNotification = JSON.stringify(prepareNot(receivedNotification));
-        // Broadcast the new message to all clients
         wss.clients.forEach(function each(client) {
           if (client.readyState === WebSocket.OPEN) {
             client.send(preparedNotification);
