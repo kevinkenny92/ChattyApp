@@ -6,10 +6,9 @@ import NavBar from './NavBar.jsx';
 import UserCount from './UserCount.jsx';
 
 const appData = {
-  currentUser: {name: "Bob"}, // optional. if currentUser is not defined, it means the user is Anonymous //
-  messages: [], // messages coming from the server will be stored here as they arrive //
+  currentUser: {name: "Bob"},
+  messages: [],
   userCount: 0
-
 }
 
 const ws = new WebSocket("ws://0.0.0.0:3001/");
@@ -20,11 +19,13 @@ class App extends Component {
     this.state = appData;
   }
 
+///test //
+
   addMessage(message) {
     const newMessage = {
+      type: "postMessage",
       id: new Date(),
-      username: this.state.currentUser.name,    //Send the new username to the App component so this.state.currentUser can be updated//
-
+      username: this.state.currentUser.name,
       content: message
     };
     ws.send(JSON.stringify(newMessage));
@@ -33,17 +34,14 @@ class App extends Component {
   }
 
   changeUser(user) {
-    let ogUser = this.state.currentUser.name;
+    let originalUser = this.state.currentUser.name;
     // If a user hasn't entered a name, assign them "Anonymous"
     let newUser = user || "Anonymous";
     this.setState({
       currentUser: {name: newUser}
     });
     console.log("Current user changed to " + newUser);
-    // Send a postNotification message to the server
-    let notificationStatement = (`${ogUser}  is now  ${newUser}.`);
-    console.log("notificationStatement: ");
-    console.log(notificationStatement);
+    let notificationStatement = (`${originalUser} changed their name to ${newUser}.`);
     let userChangeNotification = {
       type: "postNotification",
       id: new Date(),
@@ -52,7 +50,8 @@ class App extends Component {
     ws.send(JSON.stringify(userChangeNotification));
   }
 
-   componentDidMount() {
+
+  componentDidMount() {
     console.log("componentDidMount <App />");
     ws.onopen = function(event) {
       console.log('Connected to server', event);
@@ -62,15 +61,13 @@ class App extends Component {
       console.log(event);
       let data = JSON.parse(event.data);
       switch(data.type) {
-
         case "userCountUpdate":
           const updatedUserCount = data.content;
           this.setState({
             userCount: updatedUserCount
           });
-          console.log("Updated User Count");
+          console.log("Updated User Count inside switch!");
           break;
-
         case "incomingMessage":
         case "incomingNotification":
           const updatedMessages = this.state.messages.concat(data);
@@ -83,6 +80,7 @@ class App extends Component {
       }
     }
   }
+
   render() {
     console.log("Rendering <App/>");
     return (
