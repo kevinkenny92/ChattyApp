@@ -56,7 +56,6 @@ wss.on('connection', (ws) => {
     })
   }
 
-//test test test//
   console.log('Client connected');
 
   sendUserCount();
