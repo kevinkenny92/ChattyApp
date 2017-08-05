@@ -1,26 +1,20 @@
-// server.js
-
 const express = require('express');
 const WebSocket = require('ws');
 const SocketServer = WebSocket.Server;
 
-// Set the port to 3001
+//PORT GENERATE
 const PORT = 3001;
 
 // Create a new express server
 const server = express()
-   // Make the express server serve static assets (html, javascript, css) from the /public folder
+
   .use(express.static('public'))
   .listen(PORT, '0.0.0.0', 'localhost', () => console.log(`Listening on ${ PORT }`));
 
-// Create the WebSockets server
 const wss = new SocketServer({ server });
-
-// Use to generate random numbers, like our new message id
 const uuidv4 = require('uuid/v4');
 
-// Modified for showing users online Step 4 final step ;
-const prepMsg = function(message) {
+const prepareMessage = function(message) {
   let returnMessage = {
     type: "incomingMessage",
     id: uuidv4(),
@@ -32,7 +26,7 @@ const prepMsg = function(message) {
   return returnMessage;
 };
 
-const prepareNot = function(notification) {
+const prepareNotification = function(notification) {
   let returnNotification = {
     type: "incomingNotification",
     id: uuidv4(),
@@ -43,15 +37,13 @@ const prepareNot = function(notification) {
   return returnNotification;
 };
 
-
-//USER COUNT //
 const getUserCount = function(count) {
-  let onlineUserCount = {
+  let latestUserCount = {
     type: "userCountUpdate",
     id: uuidv4(),
     content: count
   }
-  return onlineUserCount;
+  return latestUserCount;
 }
 
 
@@ -63,34 +55,30 @@ wss.on('connection', (ws) => {
       }
     })
   }
+
   console.log('Client connected');
+
   sendUserCount();
-
-//MESSAGING
-
   ws.on('message', function incoming(event) {
     let data = JSON.parse(event);
-    console.dir(data);
     switch(data.type) {
-      case "postMsg":
-        let rcvdMsg = JSON.parse(event);
+      case "postMessage":
+        let receivedMessage = JSON.parse(event);
         console.log("Received a message: ");
-        console.log(rcvdMsg);
+        console.log(receivedMessage);
 
-        let preparedMessage = JSON.stringify(prepMsg(rcvdMsg));
+        let preparedMessage = JSON.stringify(prepareMessage(receivedMessage));
         wss.clients.forEach(function each(client) {
           if (client.readyState === WebSocket.OPEN) {
             client.send(preparedMessage);
           }
         });
         break;
-
       case "postNotification":
         let receivedNotification = JSON.parse(event);
         console.log("Received a notification: ");
         console.log(receivedNotification);
-
-        let preparedNotification = JSON.stringify(prepareNot(receivedNotification));
+        let preparedNotification = JSON.stringify(prepareNotification(receivedNotification));
         wss.clients.forEach(function each(client) {
           if (client.readyState === WebSocket.OPEN) {
             client.send(preparedNotification);
@@ -98,16 +86,12 @@ wss.on('connection', (ws) => {
         });
         break;
       default:
-        // If message type is unknown, throw error
-        //throw new Error("Unknown event type " + data);
-        console.log('Unknown event')
+        throw new Error("Unknown event type " + data.type);
     }
   });
 
-  // When a client closes the socket, calls sendUserCount to reflect one less user
   ws.on('close', () => {
     console.log('Client disconnected');
-    // Update the user count, given a closed connection
     sendUserCount();
   });
 });
